@@ -1,87 +1,43 @@
-import { DbAddAccount } from './api-find-geolocation'
-import { Hasher, AddAccountRepository, LoadAccountByEmailRepository } from './api-find-geolocation-protocols'
-import { mockHasher, mockAddAccountRepository, mockLoadAccountByEmailRepository } from '@/data/test'
-import { mockAddAccountParams, mockAccountModel, throwError } from '@/domain/test'
+import { ApiFindGeolocation } from './api-find-geolocation'
+import { Geolocator } from './api-find-geolocation-protocols'
+import { mockGeolocator } from '@/data/test'
+import { throwError, mockGeolocation } from '@/domain/test'
 
 type SutTypes = {
-  sut: DbAddAccount
-  hasherStub: Hasher
-  addAccountRepositoryStub: AddAccountRepository
-  loadAccountByEmailRepositoryStub: LoadAccountByEmailRepository
+  sut: ApiFindGeolocation
+  geolocatorStub: Geolocator
 }
 
 const makeSut = (): SutTypes => {
-  const hasherStub = mockHasher()
-  const loadAccountByEmailRepositoryStub = mockLoadAccountByEmailRepository()
-  jest.spyOn(loadAccountByEmailRepositoryStub, 'loadByEmail').mockReturnValue(Promise.resolve(null))
-  const addAccountRepositoryStub = mockAddAccountRepository()
-  const sut = new DbAddAccount(hasherStub, addAccountRepositoryStub, loadAccountByEmailRepositoryStub)
+  const geolocatorStub = mockGeolocator()
+  const sut = new ApiFindGeolocation(geolocatorStub)
   return {
     sut,
-    hasherStub,
-    addAccountRepositoryStub,
-    loadAccountByEmailRepositoryStub
+    geolocatorStub
   }
 }
 
-describe('DbAddAccount UseCase', () => {
-  test('Should call Hasher with correct password', async () => {
-    const { sut, hasherStub } = makeSut()
-    const hashSpy = jest.spyOn(hasherStub, 'hash')
+describe('Api Find Geolocation UseCase', () => {
+  test('Should call Geolocator with correct value', async () => {
+    const { sut, geolocatorStub } = makeSut()
+    const geolocatorSpy = jest.spyOn(geolocatorStub, 'locate')
+    await sut.toLocate('any address')
 
-    await sut.add(mockAddAccountParams())
-
-    expect(hashSpy).toHaveBeenCalledWith('any_password')
+    expect(geolocatorSpy).toHaveBeenCalledWith('any address')
   })
 
   test('Should throw if Hasher throws', async () => {
-    const { sut, hasherStub } = makeSut()
-    jest.spyOn(hasherStub, 'hash').mockImplementationOnce(throwError)
+    const { sut, geolocatorStub } = makeSut()
+    jest.spyOn(geolocatorStub, 'locate').mockImplementationOnce(throwError)
 
-    const promise = sut.add(mockAddAccountParams())
-
-    await expect(promise).rejects.toThrow()
-  })
-
-  test('Should call AddAccountRepository with correct values', async () => {
-    const { sut, addAccountRepositoryStub } = makeSut()
-    const addSpy = jest.spyOn(addAccountRepositoryStub, 'add')
-
-    await sut.add(mockAddAccountParams())
-
-    expect(addSpy).toHaveBeenCalledWith({
-      name: 'any_name',
-      email: 'any_email@mail.com',
-      password: 'hashed_value'
-    })
-  })
-
-  test('Should throw if AddAccountRepository throws', async () => {
-    const { sut, addAccountRepositoryStub } = makeSut()
-    jest.spyOn(addAccountRepositoryStub, 'add').mockImplementationOnce(throwError)
-
-    const promise = sut.add(mockAddAccountParams())
+    const promise = await sut.toLocate('any address')
 
     await expect(promise).rejects.toThrow()
   })
 
   test('Should return an account on success', async () => {
     const { sut } = makeSut()
-    const account = await sut.add(mockAddAccountParams())
-    expect(account).toEqual(mockAccountModel())
-  })
-
-  test('Should return null if loadAccountByEmailRepository not return null', async () => {
-    const { sut, loadAccountByEmailRepositoryStub } = makeSut()
-    jest.spyOn(loadAccountByEmailRepositoryStub, 'loadByEmail').mockReturnValueOnce(Promise.resolve(mockAccountModel()))
-    const account = await sut.add(mockAddAccountParams())
-    expect(account).toBeNull()
-  })
-
-  test('Should call loadAccountByEmailRepository with correct email', async () => {
-    const { sut, loadAccountByEmailRepositoryStub } = makeSut()
-    const loadSpy = jest.spyOn(loadAccountByEmailRepositoryStub, 'loadByEmail')
-    await sut.add(mockAddAccountParams())
-    expect(loadSpy).toHaveBeenCalledWith('any_email@mail.com')
+    const geolocation = await sut.toLocate('any address')
+    expect(geolocation).toEqual(mockGeolocation())
   })
 })

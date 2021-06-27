@@ -22,13 +22,12 @@ export class AddressController implements Controller {
 
       const distanceList = []
       for (let i = 0; i < locations.length; i++) {
-        // Valores senbdo calculados 2x
-        const locationsToCalculate: Geolocation[] = locations.filter((item) => item !== locations[i])
+        const locationsToCalculate: Geolocation[] = locations.filter((item, index) => index > i)
 
         for (const location of locationsToCalculate) {
           const distance = Math.sqrt(Math.pow((location.lng - locations[i].lng), 2) + Math.pow((location.lat - locations[i].lat), 2))
           distanceList.push({
-            adresses: [location, locations[i]],
+            adressesWithCoordinates: [location, locations[i]],
             distance
           })
         }
