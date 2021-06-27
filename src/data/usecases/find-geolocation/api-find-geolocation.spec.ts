@@ -30,7 +30,7 @@ describe('Api Find Geolocation UseCase', () => {
     const { sut, geolocatorStub } = makeSut()
     jest.spyOn(geolocatorStub, 'locate').mockImplementationOnce(throwError)
 
-    const promise = await sut.toLocate('any address')
+    const promise = sut.toLocate('any address')
 
     await expect(promise).rejects.toThrow()
   })

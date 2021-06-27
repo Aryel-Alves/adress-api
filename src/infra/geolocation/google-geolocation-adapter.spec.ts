@@ -6,6 +6,7 @@ jest.mock('axios', () => ({
   async get (): Promise<any> {
     return await Promise.resolve({
       data: {
+        status: 'OK',
         results: [
           {
             geometry: {
@@ -32,7 +33,7 @@ describe('Google Geolocation Adapter', () => {
       expect(location).toStrictEqual(mockGeolocation())
     })
 
-    test('Should throws if hash throws', async () => {
+    test('Should throws if axios throws', async () => {
       const sut = makeSut()
       jest.spyOn(axios, 'get').mockImplementationOnce(throwError)
       const promise = sut.locate('any_value')
