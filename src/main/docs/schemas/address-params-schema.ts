@@ -1,7 +1,7 @@
 export const AddressParamsSchema = {
   type: 'object',
   properties: {
-    address: { type: 'string' }
+    addresses: { type: 'array', items: { type: 'string' } }
   },
-  required: ['address']
+  required: ['addresses']
 }
