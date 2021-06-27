@@ -1,6 +1,5 @@
-import { Controller, HttpRequest, HttpResponse, Validation } from './address-controller-protocols'
+import { Controller, HttpRequest, HttpResponse, Validation, FindGeolocation, Geolocation } from './address-controller-protocols'
 import { badRequest, serverError, ok } from '@/presentation/helpers/http/http-helper'
-import { FindGeolocation } from '@/domain/useCases/find-geolocation'
 
 export class AddressController implements Controller {
   constructor (
@@ -14,14 +13,28 @@ export class AddressController implements Controller {
       if (error) {
         return badRequest(error)
       }
-      const mockAddress = [
-        'Av. Rio Branco, 1 Centro, Rio de Janeiro RJ, 20090003',
-        'Praça Mal. Âncora, 122 Centro, Rio de Janeiro RJ, 20021200',
-        'Rua 19 de  Fevereiro, 34 Botafogo, Rio de Janeiro RJ, 22280030'
-      ]
-      const respot = await this.findGeolocation.toLocate(mockAddress[0])
 
-      return ok({ mockAddress })
+      const { addresses } = httpRequest.body
+      const locations: Geolocation[] = await Promise.all(addresses.map(async (address) => {
+        const location = await this.findGeolocation.toLocate(address)
+        return { ...location, address }
+      }))
+
+      const distanceList = []
+      for (let i = 0; i < locations.length; i++) {
+        // Valores senbdo calculados 2x
+        const locationsToCalculate: Geolocation[] = locations.filter((item) => item !== locations[i])
+
+        for (const location of locationsToCalculate) {
+          const distance = Math.sqrt(Math.pow((location.lng - locations[i].lng), 2) + Math.pow((location.lat - locations[i].lat), 2))
+          distanceList.push({
+            adresses: [location, locations[i]],
+            distance
+          })
+        }
+      }
+
+      return ok({ results: distanceList.sort((a, b) => a.distance - b.distance) })
     } catch (error) {
       return serverError(error)
     }

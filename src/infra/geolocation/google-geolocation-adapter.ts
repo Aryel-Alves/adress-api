@@ -5,10 +5,10 @@ export class GoogleGeolocationAdapter implements Geolocator {
   constructor (private readonly apiUrl: string, private readonly apiToken: string) {}
 
   async locate (address: string): Promise<string> {
-    const url = `${this.apiUrl}?address=${address}&key=${this.apiToken}`
+    const encodedAddress = encodeURI(address)
+    const url = `${this.apiUrl}?address=${encodedAddress}&key=${this.apiToken}`
     const response = await axios.get(url)
-    console.log('---------------AAAAAAAAAA----')
-    console.log(response.data)
-    return await Promise.resolve('aaaa')
+    const results = response.data.results
+    return results[0].geometry.location
   }
 }

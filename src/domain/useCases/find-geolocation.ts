@@ -1,3 +1,3 @@
 export interface FindGeolocation {
-  toLocate: (address: string) => Promise<any>
+  toLocate: (address: string) => Promise<Geolocation>
 }
