@@ -15,3 +15,7 @@ API para calculo de distancia euclidiana entre endereços
 ### Documentação
 
 Para vizualização da documentação da api basta acessar no navegador o endpoint   [**/api-docs**](http://localhost:5050/api-docs) la existe uma breve explicação de como chamar o endpoint de calculo
+
+<p align="center">
+  <img src="https://imgur.com/cQ9su3b.png">
+</p> 
