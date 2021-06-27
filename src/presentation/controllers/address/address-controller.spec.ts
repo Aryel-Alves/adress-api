@@ -1,41 +1,46 @@
 import { AddressController } from './address-controller'
-import { HttpRequest, Validation } from './address-controller-protocols'
-import { badRequest, ok } from '@/presentation/helpers/http/http-helper'
+import { HttpRequest, Validation, FindGeolocation } from './address-controller-protocols'
+import { badRequest, serverError } from '@/presentation/helpers/http/http-helper'
 import { MissingParamError } from '@/presentation/errors'
-import { mockValidation } from '@/presentation/test'
-// import { throwError } from '@/domain/test'
+import { mockValidation, mockFindGeolocation } from '@/presentation/test'
+import { throwError } from '@/domain/test'
 
 const mockRequest = (): HttpRequest => ({
   body: {
-    email: 'any_email@mail.com',
-    password: 'any_password'
+    addresses: [
+      'Av. Rio Branco, 1 Centro, Rio de Janeiro RJ, 20090003',
+      'Praça Mal. Âncora, 122 Centro, Rio de Janeiro RJ, 20021200',
+      'Rua 19 de  Fevereiro, 34 Botafogo, Rio de Janeiro RJ, 22280030'
+    ]
   }
 })
 
 type SutTypes = {
   sut: AddressController
   validationStub: Validation
+  findGeolocationStub: FindGeolocation
 }
 
 const makeSut = (): SutTypes => {
   const validationStub = mockValidation()
-  const sut = new AddressController(validationStub)
+  const findGeolocationStub = mockFindGeolocation()
+  const sut = new AddressController(validationStub, findGeolocationStub)
 
-  return { sut, validationStub }
+  return { sut, validationStub, findGeolocationStub }
 }
 
 describe('Address Controller', () => {
-  // test('Should return 500 if authentication throws', async () => {
-  //   const { sut, authenticationStub } = makeSut()
-  //   jest.spyOn(authenticationStub, 'auth').mockImplementationOnce(throwError)
-  //   const httpResponse = await sut.handle(mockRequest())
-  //   expect(httpResponse).toEqual(serverError(new Error()))
-  // })
+  test('Should return 500 if authentication throws', async () => {
+    const { sut, findGeolocationStub } = makeSut()
+    jest.spyOn(findGeolocationStub, 'toLocate').mockImplementationOnce(throwError)
+    const httpResponse = await sut.handle(mockRequest())
+    expect(httpResponse).toEqual(serverError(new Error()))
+  })
 
-  test('Should return 200 if valid credentials are provided', async () => {
+  test('Should return 200 on success', async () => {
     const { sut } = makeSut()
     const httpResponse = await sut.handle(mockRequest())
-    expect(httpResponse).toEqual(ok({ accessToken: 'any_token' }))
+    expect(httpResponse.statusCode).toEqual(200)
   })
 
   test('Should call Validation with correct value', async () => {

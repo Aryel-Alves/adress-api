@@ -26,7 +26,7 @@ describe('Api Find Geolocation UseCase', () => {
     expect(geolocatorSpy).toHaveBeenCalledWith('any address')
   })
 
-  test('Should throw if Hasher throws', async () => {
+  test('Should throw if Geolocator throws', async () => {
     const { sut, geolocatorStub } = makeSut()
     jest.spyOn(geolocatorStub, 'locate').mockImplementationOnce(throwError)
 

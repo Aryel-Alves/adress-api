@@ -1,10 +1,20 @@
 import { GoogleGeolocationAdapter } from './google-geolocation-adapter'
-import { throwError } from '@/domain/test'
+import { mockGeolocation, throwError } from '@/domain/test'
 import axios from 'axios'
 
 jest.mock('axios', () => ({
-  async get (): Promise<string> {
-    return await Promise.resolve('hash')
+  async get (): Promise<any> {
+    return await Promise.resolve({
+      data: {
+        results: [
+          {
+            geometry: {
+              location: mockGeolocation()
+            }
+          }
+        ]
+      }
+    })
   }
 }))
 
@@ -16,17 +26,10 @@ const makeSut = (): GoogleGeolocationAdapter => {
 
 describe('Google Geolocation Adapter', () => {
   describe('locate()', () => {
-    test('Should call hash with correct value', async () => {
+    test('Should return a valid geolocation on locate on success', async () => {
       const sut = makeSut()
-      const hashSpy = jest.spyOn(axios, 'get')
-      await sut.locate('any_value')
-      expect(hashSpy).toHaveBeenCalledWith('any_value')
-    })
-
-    test('Should return a valid hash on hash on success', async () => {
-      const sut = makeSut()
-      const hash = await sut.locate('any_value')
-      expect(hash).toBe('hash')
+      const location = await sut.locate('any_value')
+      expect(location).toStrictEqual(mockGeolocation())
     })
 
     test('Should throws if hash throws', async () => {
